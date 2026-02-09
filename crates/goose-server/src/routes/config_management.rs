@@ -94,8 +94,11 @@ pub struct UpdateCustomProviderRequest {
     pub headers: Option<std::collections::HashMap<String, String>>,
     #[serde(default = "default_requires_auth")]
     pub requires_auth: bool,
+    #[serde(default)]
     pub api_key_command: Option<String>,
+    #[serde(default)]
     pub api_key_file: Option<String>,
+    #[serde(default)]
     pub api_key_file_field: Option<String>,
 }
 
