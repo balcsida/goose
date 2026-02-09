@@ -108,6 +108,14 @@ impl DeclarativeProviderConfig {
             }
         }
 
+        if self.requires_auth {
+            tracing::warn!(
+                "Provider '{}' requires auth but no credentials found (checked api_key_command, api_key_file, and api_key_env '{}'); falling back to NoAuth",
+                self.name,
+                self.api_key_env
+            );
+        }
+
         Ok(AuthMethod::NoAuth)
     }
 }
@@ -270,11 +278,9 @@ pub fn update_custom_provider(params: UpdateCustomProviderParams) -> Result<()> 
             timeout_seconds: existing_config.timeout_seconds,
             supports_streaming: params.supports_streaming,
             requires_auth: params.requires_auth,
-            api_key_command: params.api_key_command.or(existing_config.api_key_command),
-            api_key_file: params.api_key_file.or(existing_config.api_key_file),
-            api_key_file_field: params
-                .api_key_file_field
-                .or(existing_config.api_key_file_field),
+            api_key_command: params.api_key_command,
+            api_key_file: params.api_key_file,
+            api_key_file_field: params.api_key_file_field,
         };
 
         let file_path = custom_providers_dir().join(format!("{}.json", updated_config.name));
