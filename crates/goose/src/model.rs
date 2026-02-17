@@ -57,6 +57,11 @@ pub struct ModelConfig {
     /// Provider-specific request parameters (e.g., anthropic_beta headers)
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub request_params: Option<HashMap<String, Value>>,
+    /// Reasoning variant level (e.g., "low", "medium", "high", "max").
+    /// Controls reasoning effort/budget for models that support extended thinking.
+    /// The provider translates this into the appropriate API parameters.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub variant: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reasoning: Option<bool>,
 }
@@ -113,6 +118,7 @@ impl ModelConfig {
         let temperature = Self::parse_temperature()?;
         let toolshim = Self::parse_toolshim()?;
         let toolshim_model = Self::parse_toolshim_model()?;
+        let variant = Self::parse_variant()?;
 
         // Pick up request_params from predefined models (always applies)
         let predefined = find_predefined_model(&model_name);
@@ -127,6 +133,7 @@ impl ModelConfig {
             toolshim_model,
             fast_model_config: None,
             request_params,
+            variant,
             reasoning: None,
         })
     }
@@ -260,6 +267,24 @@ impl ModelConfig {
         }
     }
 
+    fn parse_variant() -> Result<Option<String>, ConfigError> {
+        match std::env::var("GOOSE_VARIANT") {
+            Ok(val) if val.trim().is_empty() => Ok(None),
+            Ok(val) => {
+                let normalized = val.trim().to_lowercase();
+                match normalized.as_str() {
+                    "low" | "medium" | "high" | "max" => Ok(Some(normalized)),
+                    _ => Err(ConfigError::InvalidValue(
+                        "GOOSE_VARIANT".to_string(),
+                        val,
+                        "must be one of: low, medium, high, max".to_string(),
+                    )),
+                }
+            }
+            Err(_) => Ok(None),
+        }
+    }
+
     pub fn with_context_limit(mut self, limit: Option<usize>) -> Self {
         if limit.is_some() {
             self.context_limit = limit;
@@ -300,6 +325,11 @@ impl ModelConfig {
 
     pub fn with_request_params(mut self, params: Option<HashMap<String, Value>>) -> Self {
         self.request_params = params;
+        self
+    }
+
+    pub fn with_variant(mut self, variant: Option<String>) -> Self {
+        self.variant = variant;
         self
     }
 

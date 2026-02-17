@@ -161,9 +161,8 @@ impl LiteLLMProvider {
                 // 1. Explicit model_info.supports_reasoning flag (user-configured)
                 // 2. LiteLLM's built-in supports_reasoning field
                 // 3. Fall back to false (safe default — never inject reasoning params unless known)
-                let supports_reasoning = model_info["supports_reasoning"]
-                    .as_bool()
-                    .unwrap_or(false);
+                let supports_reasoning =
+                    model_info["supports_reasoning"].as_bool().unwrap_or(false);
 
                 let supports_cache_control = model_info["supports_prompt_caching"]
                     .as_bool()
@@ -703,9 +702,7 @@ mod tests {
                 .as_str()
                 .map(|s| s.to_string());
 
-            let supports_reasoning = model_info["supports_reasoning"]
-                .as_bool()
-                .unwrap_or(false);
+            let supports_reasoning = model_info["supports_reasoning"].as_bool().unwrap_or(false);
 
             capabilities.insert(
                 model_name.to_string(),
@@ -869,6 +866,7 @@ mod tests {
             toolshim_model: None,
             fast_model: None,
             request_params: None,
+            variant: None,
         };
 
         let messages = vec![crate::conversation::message::Message::user().with_text("Hello")];
