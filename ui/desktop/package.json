@@ -155,6 +155,7 @@
     "@vitejs/plugin-react": "^5.1.4",
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.0.18",
+    "@tauri-apps/cli": "^2",
     "autoprefixer": "^10.4.24",
     "electron": "41.0.0",
     "electron-devtools-installer": "^4.0.0",
