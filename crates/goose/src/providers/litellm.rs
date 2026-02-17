@@ -315,6 +315,7 @@ impl ProviderDef for LiteLLMProvider {
                 ConfigKey::new("LITELLM_TIMEOUT", false, false, Some("600"), false),
             ],
         )
+        .with_unlisted_models()
     }
 
     fn from_env(
