@@ -29,6 +29,7 @@ pub enum InputResult {
     Edit(Option<String>),
     ListSkills,
     LoadSkills(Vec<String>),
+    Variant(Option<String>),
 }
 
 #[derive(Debug)]
@@ -207,6 +208,8 @@ fn handle_slash_command(input: &str) -> Option<InputResult> {
     const CMD_EDIT: &str = "/edit";
     const CMD_EDIT_WITH_SPACE: &str = "/edit ";
     const CMD_SKILLS: &str = "/skills";
+    const CMD_VARIANT: &str = "/variant";
+    const CMD_VARIANT_WITH_SPACE: &str = "/variant ";
 
     match input {
         "/exit" | "/quit" => Some(InputResult::Exit),
@@ -295,6 +298,25 @@ fn handle_slash_command(input: &str) -> Option<InputResult> {
                 Some(InputResult::Edit(None))
             } else {
                 Some(InputResult::Edit(Some(prefill.to_string())))
+            }
+        }
+        s if s == CMD_VARIANT => Some(InputResult::Variant(None)),
+        s if s.starts_with(CMD_VARIANT_WITH_SPACE) => {
+            let level = s
+                .strip_prefix(CMD_VARIANT_WITH_SPACE)
+                .unwrap_or("")
+                .trim()
+                .to_lowercase();
+            match level.as_str() {
+                "low" | "medium" | "high" | "max" => Some(InputResult::Variant(Some(level))),
+                "off" | "none" | "reset" => Some(InputResult::Variant(None)),
+                _ => {
+                    println!(
+                        "Invalid variant level: {}. Use: low, medium, high, max, or off",
+                        level
+                    );
+                    Some(InputResult::Retry)
+                }
             }
         }
         _ => None,
@@ -431,6 +453,7 @@ fn print_help() {
 /edit [text] - Open your prompt editor to compose a message. Optionally pre-fill with text.
                Uses $GOOSE_PROMPT_EDITOR, $VISUAL, or $EDITOR (in that order).
 /skills - List available skills or enable skills by name (usage: /skills [<name>...])
+/variant [level] - Show current reasoning variant or set level (low, medium, high, max, off). Takes effect on next session start.
 /? or /help - Display this help message
 /clear - Clears the current chat history
 
