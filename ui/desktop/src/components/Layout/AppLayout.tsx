@@ -21,6 +21,7 @@ interface AppLayoutContentProps {
 const AppLayoutContent: React.FC<AppLayoutContentProps> = ({ activeSessions }) => {
   const location = useLocation();
   const safeIsMacOS = (window?.electron?.platform || 'darwin') === 'darwin';
+  const isTauri = '__TAURI_INTERNALS__' in window;
   const chatContext = useChatContext();
   const isOnPairRoute = location.pathname === '/pair';
 
