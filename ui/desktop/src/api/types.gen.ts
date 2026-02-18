@@ -1647,6 +1647,11 @@ export type UpdateProviderRequest = {
         [key: string]: unknown;
     } | null;
     session_id: string;
+    /**
+     * Reasoning variant level (e.g., "low", "medium", "high", "max").
+     * Only applicable to models that support reasoning.
+     */
+    variant?: string | null;
 };
 
 export type UpdateScheduleRequest = {
