@@ -4,8 +4,8 @@
   "identifier": "com.block.goose",
   "version": "1.24.0",
   "build": {
-    "beforeDevCommand": "npm run dev:frontend",
-    "beforeBuildCommand": "npm run build:frontend",
+    "beforeDevCommand": "pnpm run dev:frontend",
+    "beforeBuildCommand": "pnpm run build:frontend",
     "devUrl": "http://localhost:5173",
     "frontendDist": "../dist"
   },
