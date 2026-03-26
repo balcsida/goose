@@ -1,0 +1,48 @@
+# Flatpak manifest for Goose Desktop (Tauri)
+# Used by flatpak-builder in CI to produce .flatpak bundles.
+app-id: io.github.block.Goose
+runtime: org.freedesktop.Platform
+runtime-version: "24.08"
+sdk: org.freedesktop.Sdk
+command: goose-desktop
+
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --socket=wayland
+  - --device=dri
+  - --share=network
+  - --filesystem=home
+  - --talk-name=org.freedesktop.Notifications
+  - --socket=session-bus
+  - --socket=system-bus
+  # WebKitGTK needs GPU access
+  - --device=all
+  - --env=LD_LIBRARY_PATH=/app/lib
+
+modules:
+  # libbz2 shim — the runtime ships libbz2.so.1 but some linked libs expect
+  # libbz2.so.1.0.  Create a symlink so everything resolves.
+  - name: libbz2-shim
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/lib
+      - ln -sf "$(find /usr/lib -name 'libbz2.so.1' | head -n1)" /app/lib/libbz2.so.1.0
+
+  # The pre-built Tauri binary produced by `tauri build`
+  - name: goose-desktop
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 goose-desktop /app/bin/goose-desktop
+      - install -Dm644 icon-128.png /app/share/icons/hicolor/128x128/apps/io.github.block.Goose.png
+      - install -Dm644 io.github.block.Goose.desktop /app/share/applications/io.github.block.Goose.desktop
+      - install -Dm644 io.github.block.Goose.metainfo.xml /app/share/metainfo/io.github.block.Goose.metainfo.xml
+    sources:
+      - type: file
+        path: goose-desktop
+      - type: file
+        path: icon-128.png
+      - type: file
+        path: io.github.block.Goose.desktop
+      - type: file
+        path: io.github.block.Goose.metainfo.xml
