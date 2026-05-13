@@ -7,16 +7,14 @@ use tokio::sync::OnceCell;
 
 use super::api_client::{ApiClient, AuthMethod};
 use super::base::{
-    ConfigKey, MessageStream, ModelInfo, Provider, ProviderDef, ProviderMetadata, ProviderUsage,
+    ConfigKey, MessageStream, ModelInfo, Provider, ProviderDef, ProviderMetadata,
     DEFAULT_PROVIDER_TIMEOUT_SECS,
 };
 use super::embedding::EmbeddingCapable;
 use super::errors::ProviderError;
-use super::openai_compatible::{
-    handle_response_openai_compat, handle_status_openai_compat, stream_openai_compat,
-};
+use super::openai_compatible::{handle_status_openai_compat, stream_openai_compat};
 use super::retry::ProviderRetry;
-use super::utils::{get_model, ImageFormat, RequestLog};
+use super::utils::{ImageFormat, RequestLog};
 use crate::conversation::message::Message;
 use crate::model::ModelConfig;
 use rmcp::model::Tool;
@@ -272,18 +270,6 @@ impl LiteLLMProvider {
             );
         }
     }
-
-    async fn post(
-        &self,
-        session_id: Option<&str>,
-        payload: &Value,
-    ) -> Result<Value, ProviderError> {
-        let response = self
-            .api_client
-            .response_post(session_id, &self.base_path, payload)
-            .await?;
-        handle_response_openai_compat(response).await
-    }
 }
 
 impl ProviderDef for LiteLLMProvider {
@@ -338,6 +324,7 @@ impl Provider for LiteLLMProvider {
         self.model.clone()
     }
 
+    #[tracing::instrument(skip_all, name = "provider_stream")]
     async fn stream(
         &self,
         model_config: &ModelConfig,
@@ -351,14 +338,14 @@ impl Provider for LiteLLMProvider {
         } else {
             Some(session_id)
         };
-        // Build the request using the standard OpenAI format
+        // Build the request using the standard OpenAI format with streaming enabled
         let mut payload = super::formats::openai::create_request(
             model_config,
             system,
             messages,
             tools,
             &ImageFormat::OpenAi,
-            false,
+            true,
         )?;
 
         // Fix for #4221: The OpenAI format uses model-name heuristics (names starting
@@ -383,71 +370,13 @@ impl Provider for LiteLLMProvider {
             payload = update_request_for_cache_control(&payload);
         }
 
-        let response = self
-            .with_retry(|| async {
-                let payload_clone = payload.clone();
-                self.post(session_id, &payload_clone).await
-            })
-            .await?;
-
-        let message = super::formats::openai::response_to_message(&response)?;
-        let usage = response
-            .get("usage")
-            .map(super::formats::openai::get_usage)
-            .unwrap_or_default();
-        let response_model = get_model(&response);
         let mut log = RequestLog::start(model_config, &payload)?;
-        log.write(&response, Some(&usage))?;
-        let provider_usage = ProviderUsage::new(response_model, usage);
-        Ok(super::base::stream_from_single_message(
-            message,
-            provider_usage,
-        ))
-    }
-
-    fn supports_streaming(&self) -> bool {
-        true
-    }
-
-    async fn stream(
-        &self,
-        session_id: &str,
-        system: &str,
-        messages: &[Message],
-        tools: &[Tool],
-    ) -> Result<MessageStream, ProviderError> {
-        let mut payload = super::formats::openai::create_request(
-            &self.model,
-            system,
-            messages,
-            tools,
-            &ImageFormat::OpenAi,
-            true,
-        )?;
-
-        let supports_reasoning = self
-            .model_supports_reasoning(&self.model.model_name)
-            .await;
-
-        if supports_reasoning {
-            if let Some(ref variant) = self.model.variant {
-                Self::apply_variant(&mut payload, variant);
-            }
-        } else {
-            Self::strip_reasoning_params(&mut payload);
-        }
-
-        if self.supports_cache_control().await {
-            payload = update_request_for_cache_control(&payload);
-        }
-
-        let mut log = RequestLog::start(&self.model, &payload)?;
 
         let response = self
             .with_retry(|| async {
                 let resp = self
                     .api_client
-                    .response_post(Some(session_id), &self.base_path, &payload)
+                    .response_post(session_id, &self.base_path, &payload)
                     .await?;
                 handle_status_openai_compat(resp).await
             })
@@ -970,7 +899,7 @@ mod tests {
             max_tokens: Some(2048),
             toolshim: false,
             toolshim_model: None,
-            fast_model: None,
+            fast_model_config: None,
             request_params: None,
             variant: None,
         };
