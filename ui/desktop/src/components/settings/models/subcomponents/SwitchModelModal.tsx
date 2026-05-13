@@ -281,6 +281,7 @@ export const SwitchModelModal = ({
     changeModel,
     currentModel: configModel,
     currentProvider: configProvider,
+    currentVariant,
   } = useModelAndProvider();
   // Use session-specific model/provider if available, otherwise fall back to config defaults
   const currentModel = sessionModel ?? configModel;
@@ -323,7 +324,7 @@ export const SwitchModelModal = ({
   const [claudeThinkingType, setClaudeThinkingType] = useState<string>('disabled');
   const [claudeThinkingEffort, setClaudeThinkingEffort] = useState<string>('high');
   const [claudeThinkingBudget, setClaudeThinkingBudget] = useState<string>('16000');
-  const [variant, setVariant] = useState<string>('');
+  const [variant, setVariant] = useState<string>(currentVariant || '');
 
   const modelName = usePredefinedModels ? selectedPredefinedModel?.name : model;
   const isGemini3Model = modelName?.toLowerCase().startsWith('gemini-3') ?? false;
