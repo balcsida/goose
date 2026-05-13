@@ -931,12 +931,6 @@ pub trait Provider: Send + Sync {
         Ok(vec![])
     }
 
-    /// Fetch models with enriched capability information (pricing, reasoning, etc.).
-    /// Providers that can supply model details should override this.
-    async fn fetch_model_info(&self) -> Result<Vec<ModelInfo>, ProviderError> {
-        Ok(vec![])
-    }
-
     fn skip_canonical_filtering(&self) -> bool {
         false
     }
