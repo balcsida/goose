@@ -504,13 +504,11 @@ fn select_model_from_list(
                 ),
             );
 
-            if provider_meta.allows_unlisted_models {
-                model_items.push((
-                    UNLISTED_MODEL_KEY.to_string(),
-                    "Enter a model not listed...".to_string(),
-                    String::new(),
-                ));
-            }
+            model_items.push((
+                UNLISTED_MODEL_KEY.to_string(),
+                "Enter a model not listed...".to_string(),
+                String::new(),
+            ));
 
             let items_ref: Vec<(&String, &str, &str)> = model_items
                 .iter()
@@ -540,13 +538,11 @@ fn select_model_from_list(
             .map(|(m, h)| (m.clone(), m.clone(), h.clone()))
             .collect();
 
-        if provider_meta.allows_unlisted_models {
-            model_items.push((
-                UNLISTED_MODEL_KEY.to_string(),
-                "Enter a model not listed...".to_string(),
-                String::new(),
-            ));
-        }
+        model_items.push((
+            UNLISTED_MODEL_KEY.to_string(),
+            "Enter a model not listed...".to_string(),
+            String::new(),
+        ));
 
         let items_ref: Vec<(&String, &str, &str)> = model_items
             .iter()

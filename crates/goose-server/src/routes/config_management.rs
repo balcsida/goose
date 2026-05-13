@@ -949,6 +949,10 @@ pub fn routes(state: Arc<AppState>) -> Router {
         .route("/config/extensions/{name}", delete(remove_extension))
         .route("/config/providers", get(providers))
         .route("/config/providers/{name}/models", get(get_provider_models))
+        .route(
+            "/config/providers/{name}/model-info",
+            get(get_provider_model_info),
+        )
         .route("/config/provider-catalog", get(get_provider_catalog))
         .route(
             "/config/provider-catalog/{id}",

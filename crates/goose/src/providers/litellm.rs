@@ -12,7 +12,7 @@ use super::base::{
 };
 use super::embedding::EmbeddingCapable;
 use super::errors::ProviderError;
-use super::openai_compatible::{handle_status_openai_compat, stream_openai_compat};
+use super::openai_compatible::{handle_status, stream_openai_compat};
 use super::retry::ProviderRetry;
 use super::utils::{ImageFormat, RequestLog};
 use crate::conversation::message::Message;
@@ -303,7 +303,6 @@ impl ProviderDef for LiteLLMProvider {
                 ConfigKey::new("LITELLM_TIMEOUT", false, false, Some("600"), false),
             ],
         )
-        .with_unlisted_models()
     }
 
     fn from_env(
@@ -378,7 +377,7 @@ impl Provider for LiteLLMProvider {
                     .api_client
                     .response_post(session_id, &self.base_path, &payload)
                     .await?;
-                handle_status_openai_compat(resp).await
+                handle_status(resp).await
             })
             .await
             .inspect_err(|e| {
