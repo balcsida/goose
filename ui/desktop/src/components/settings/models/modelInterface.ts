@@ -1,4 +1,10 @@
-import { ProviderDetails, getProviderModels, listLocalModels } from '../../../api';
+import {
+  ProviderDetails,
+  ModelInfo,
+  getProviderModelInfo,
+  getProviderModels,
+  listLocalModels,
+} from '../../../api';
 import { errorMessage as getErrorMessage } from '../../../utils/conversionUtils';
 
 export default interface Model {
@@ -46,8 +52,22 @@ export async function getProviderMetadata(
 export interface ProviderModelsResult {
   provider: ProviderDetails;
   models: string[] | null;
+  modelInfo: ModelInfo[] | null;
   error: string | null;
   warning: string | null;
+}
+
+export function formatModelHint(info: ModelInfo): string {
+  const parts: string[] = [];
+  if (info.supports_reasoning) {
+    parts.push('reasoning');
+  }
+  if (info.input_token_cost != null && info.output_token_cost != null) {
+    const inputPerM = (info.input_token_cost * 1_000_000).toFixed(2);
+    const outputPerM = (info.output_token_cost * 1_000_000).toFixed(2);
+    parts.push(`$${inputPerM}/$${outputPerM} per 1M tokens`);
+  }
+  return parts.join(' · ');
 }
 
 export async function fetchModelsForProviders(
@@ -62,16 +82,34 @@ export async function fetchModelsForProviders(
         const downloadedModels = allModels
           .filter((m) => m.status.state === 'Downloaded')
           .map((m) => m.id);
-        return { provider: p, models: downloadedModels, error: null, warning: null };
+        return {
+          provider: p,
+          models: downloadedModels,
+          modelInfo: null,
+          error: null,
+          warning: null,
+        };
       }
 
-      const response = await getProviderModels({
+      const infoResponse = await getProviderModelInfo({
         path: { name: p.name },
         throwOnError: true,
       });
-      const models = response.data || [];
-      return { provider: p, models, error: null, warning: null };
+      const infoList: ModelInfo[] = infoResponse.data || [];
+      const models = infoList.map((m) => m.name);
+      return { provider: p, models, modelInfo: infoList, error: null, warning: null };
     } catch (e: unknown) {
+      try {
+        const response = await getProviderModels({
+          path: { name: p.name },
+          throwOnError: true,
+        });
+        const models = response.data || [];
+        return { provider: p, models, modelInfo: null, error: null, warning: null };
+      } catch {
+        // Continue to configured-model fallback/error handling below.
+      }
+
       // For custom providers, fall back to the configured model list
       if (p.provider_type === 'Custom') {
         const fallbackModels = p.metadata.known_models.map((m) => m.name);
@@ -91,6 +129,7 @@ export async function fetchModelsForProviders(
       return {
         provider: p,
         models: null,
+        modelInfo: null,
         error: errorMessage,
         warning: null,
       };
