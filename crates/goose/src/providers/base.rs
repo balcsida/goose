@@ -394,6 +394,8 @@ pub struct ModelInfo {
     pub currency: Option<String>,
     /// Whether this model supports cache control
     pub supports_cache_control: Option<bool>,
+    /// Whether this model supports reasoning/extended thinking
+    pub supports_reasoning: Option<bool>,
 }
 
 impl ModelInfo {
@@ -406,6 +408,7 @@ impl ModelInfo {
             output_token_cost: None,
             currency: None,
             supports_cache_control: None,
+            supports_reasoning: None,
         }
     }
 
@@ -423,6 +426,7 @@ impl ModelInfo {
             output_token_cost: Some(output_cost),
             currency: Some("$".to_string()),
             supports_cache_control: None,
+            supports_reasoning: None,
         }
     }
 }
@@ -486,6 +490,7 @@ impl ProviderMetadata {
                     output_token_cost: None,
                     currency: None,
                     supports_cache_control: None,
+                    supports_reasoning: None,
                 })
                 .collect(),
             model_doc_link: model_doc_link.to_string(),
@@ -901,6 +906,13 @@ pub trait Provider: Send + Sync {
 
     fn skip_canonical_filtering(&self) -> bool {
         false
+    }
+
+    /// Fetch models with enriched capability information (pricing, reasoning, etc.).
+    /// Providers that can supply model details should override this.
+    /// Returns an empty vec by default, signaling the caller to fall back to name-only lists.
+    async fn fetch_model_info(&self) -> Result<Vec<ModelInfo>, ProviderError> {
+        Ok(vec![])
     }
 
     /// Fetch inventory models filtered by canonical registry and usability.
@@ -1728,6 +1740,7 @@ mod tests {
             output_token_cost: None,
             currency: None,
             supports_cache_control: None,
+            supports_reasoning: None,
         };
         assert_eq!(info.context_limit, 1000);
 
@@ -1750,6 +1763,7 @@ mod tests {
             output_token_cost: None,
             currency: None,
             supports_cache_control: None,
+            supports_reasoning: None,
         };
         assert_ne!(info, info3);
     }
