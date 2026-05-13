@@ -65,7 +65,11 @@ export default function ModelsBottomBar({
 }: ModelsBottomBarProps) {
   // ChatInput owns the override state and passes effective model/provider as sessionModel/sessionProvider.
   // Fall back to config defaults when no session-specific model is available.
-  const { currentModel: configModel, currentProvider: configProvider } = useModelAndProvider();
+  const {
+    currentModel: configModel,
+    currentProvider: configProvider,
+    currentVariant,
+  } = useModelAndProvider();
   const currentModel = sessionModel ?? configModel;
   const currentProvider = sessionProvider ?? configProvider;
 
@@ -137,7 +141,12 @@ export default function ModelsBottomBar({
                 <span className="truncate">{triggerLabel}</span>
               </span>
             ) : (
-              <span className="truncate text-xs">{triggerLabel}</span>
+              <span className="truncate text-xs">
+                {triggerLabel}
+                {currentVariant && (
+                  <span className="ml-1 text-[10px] opacity-60">({currentVariant})</span>
+                )}
+              </span>
             )}
           </div>
         </DropdownMenuTrigger>

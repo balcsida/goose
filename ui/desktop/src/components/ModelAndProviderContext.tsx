@@ -40,6 +40,7 @@ const i18n = defineMessages({
 interface ModelAndProviderContextType {
   currentModel: string | null;
   currentProvider: string | null;
+  currentVariant: string | null;
   changeModel: (sessionId: string | null, model: Model) => Promise<boolean>;
   getCurrentModelAndProvider: () => Promise<{ model: string; provider: string }>;
   getFallbackModelAndProvider: () => Promise<{ model: string; provider: string }>;
@@ -47,6 +48,7 @@ interface ModelAndProviderContextType {
   getCurrentModelDisplayName: () => Promise<string>;
   getCurrentProviderDisplayName: () => Promise<string>; // Gets provider display name from subtext
   refreshCurrentModelAndProvider: () => Promise<void>;
+  setProviderAndModel: (provider: string, model: string, variant?: string | null) => void;
 }
 
 interface ModelAndProviderProviderProps {
@@ -60,6 +62,7 @@ export { i18n as modelAndProviderMessages };
 export const ModelAndProviderProvider: React.FC<ModelAndProviderProviderProps> = ({ children }) => {
   const [currentModel, setCurrentModel] = useState<string | null>(null);
   const [currentProvider, setCurrentProvider] = useState<string | null>(null);
+  const [currentVariant, setCurrentVariant] = useState<string | null>(null);
   const { read, getProviders } = useConfig();
   const intl = useIntl();
 
@@ -102,6 +105,7 @@ export const ModelAndProviderProvider: React.FC<ModelAndProviderProviderProps> =
         if (!sessionId) {
           setCurrentProvider(providerName);
           setCurrentModel(modelName);
+          setCurrentVariant(model.variant || null);
         }
 
         toastSuccess({
@@ -217,6 +221,12 @@ export const ModelAndProviderProvider: React.FC<ModelAndProviderProviderProps> =
     }
   }, [getCurrentModelAndProvider]);
 
+  const setProviderAndModel = useCallback((provider: string, model: string, variant?: string | null) => {
+    setCurrentProvider(provider);
+    setCurrentModel(model);
+    setCurrentVariant(variant ?? null);
+  }, []);
+
   // Load initial model and provider on mount
   useEffect(() => {
     refreshCurrentModelAndProvider();
@@ -226,6 +236,7 @@ export const ModelAndProviderProvider: React.FC<ModelAndProviderProviderProps> =
     () => ({
       currentModel,
       currentProvider,
+      currentVariant,
       changeModel,
       getCurrentModelAndProvider,
       getFallbackModelAndProvider,
@@ -233,10 +244,12 @@ export const ModelAndProviderProvider: React.FC<ModelAndProviderProviderProps> =
       getCurrentModelDisplayName,
       getCurrentProviderDisplayName,
       refreshCurrentModelAndProvider,
+      setProviderAndModel,
     }),
     [
       currentModel,
       currentProvider,
+      currentVariant,
       changeModel,
       getCurrentModelAndProvider,
       getFallbackModelAndProvider,
@@ -244,6 +257,7 @@ export const ModelAndProviderProvider: React.FC<ModelAndProviderProviderProps> =
       getCurrentModelDisplayName,
       getCurrentProviderDisplayName,
       refreshCurrentModelAndProvider,
+      setProviderAndModel,
     ]
   );
 

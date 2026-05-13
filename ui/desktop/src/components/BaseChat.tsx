@@ -34,6 +34,7 @@ import { useToolCount } from './alerts/useToolCount';
 import { getThinkingMessage, getTextAndImageContent } from '../types/message';
 import ParameterInputModal from './ParameterInputModal';
 import { substituteParameters } from '../utils/parameterSubstitution';
+import { useModelAndProvider } from './ModelAndProviderContext';
 import CreateRecipeFromSessionModal from './recipes/CreateRecipeFromSessionModal';
 import { toastSuccess } from '../toasts';
 import { Recipe } from '../recipe';
@@ -125,6 +126,7 @@ export default function BaseChat({
   });
 
   const recipe = session?.recipe;
+  const { setProviderAndModel } = useModelAndProvider();
 
   const resolvedInitialMessage = useMemo((): UserInput | undefined => {
     if (!initialMessage) return undefined;
@@ -207,6 +209,12 @@ export default function BaseChat({
   const sessionModel = session?.model_config?.model_name ?? null;
   const sessionProvider = session?.provider_name ?? null;
   const sessionLoaded = session !== undefined;
+
+  useEffect(() => {
+    if (session?.provider_name && session?.model_config?.model_name) {
+      setProviderAndModel(session.provider_name, session.model_config.model_name, session.model_config.variant);
+    }
+  }, [session?.provider_name, session?.model_config?.model_name, session?.model_config?.variant, setProviderAndModel]);
 
   useEffect(() => {
     if (!recipe || !isActiveSession) return;
