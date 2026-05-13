@@ -119,6 +119,7 @@ export async function fetchModelsForProviders(
           return {
             provider: p,
             models: fallbackModels,
+            modelInfo: null,
             error: null,
             warning: `Could not fetch models from provider — showing configured models instead.`,
           };
